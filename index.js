@@ -51,4 +51,6 @@ app.get("/", function (req, res) {
   res.render("home");
 });
 
-server.listen(3000);
+const PORT = process.env.PORT || 3000;
+
+server.listen(PORT);
