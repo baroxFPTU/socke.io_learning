@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Learn SocketIo</title>
+    <style>
+      .message-box {
+        height: 500px;
+        overflow: auto;
+        max-height: 500px;
+      }
+    </style>
+  </head>
+  <body>
+    <ul class="message-box"></ul>
+    <div class="form-control">
+      <input
+        type="text"
+        class="message-input"
+        placeholder="Enter your message here"
+      />
+      <button class="send-button">Click send</button>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="socket.io/socket.io.min.js"></script>
+    <script>
+      const socket = io("http://localhost:3000/");
+
+      $(document).ready(function () {
+        const messageBox = $(".message-box");
+        const messageInput = $(".message-input");
+        const sendButton = $(".send-button");
+        const username = prompt("What is your name?");
+
+        //LISTEN events
+        //Update user has join server
+        socket.on("server-update-users", function (name) {
+          messageBox.append(`<li>${name} has joined the server.</li>`);
+        });
+
+        //Update user leave server
+        socket.on("server-send-users-disconnected", function (name) {
+          messageBox.append(`<li>${name} just leave the server.</li>`);
+        });
+
+        socket.on("server-update-messages", function ({ username, message }) {
+          messageBox.append(`<li>${username}: ${message}</li>`);
+        });
+
+        socket.on("server-update-message", function (messages) {
+          $.each(messages, function (index, message) {
+            messageBox.append(
+              `<li>${message.username}: ${message.message}</li>`
+            );
+          });
+        });
+
+        //EMIT events
+        socket.emit("client-send-name", username);
+
+        sendButton.click(sendMessage.bind(this, messageInput));
+        messageInput.keypress(function (e) {
+          if (e.keyCode === 13) {
+            sendMessage(messageInput);
+          }
+        });
+      });
+
+      //functions
+      const sendMessage = function (messageInput) {
+        const messageValue = messageInput.val();
+        if (messageInput.val() !== "") {
+          socket.emit("client-send-message", messageValue);
+          messageInput.val("");
+        }
+      };
+    </script>
+  </body>
+</html>
